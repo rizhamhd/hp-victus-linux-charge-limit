@@ -1,0 +1,11 @@
+[Unit]
+Description=HP Victus experimental 75/80 battery charge limiter
+ConditionPathExists=/sys/class/power_supply/BAT0/charge_behaviour
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/hp-battery-limit
+NoNewPrivileges=yes
+ProtectHome=yes
+ProtectSystem=full
+PrivateTmp=yes

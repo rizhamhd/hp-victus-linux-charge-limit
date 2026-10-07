@@ -1,0 +1,16 @@
+*.ko
+*.ko.*
+*.o
+*.mod
+*.mod.c
+.*.cmd
+Module.symvers
+modules.order
+.tmp_versions/
+*.log
+*.bak
+*.orig
+*.rej
+__pycache__/
+backups/
+.env

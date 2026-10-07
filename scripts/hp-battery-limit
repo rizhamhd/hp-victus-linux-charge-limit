@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# SPDX-License-Identifier: GPL-2.0-or-later
+# Test fixtures may override the supply root; systemd uses the real sysfs default.
+set -euo pipefail
+root=${HP_POWER_SUPPLY_ROOT:-/sys/class/power_supply}
+bat="$root/BAT0"
+ac="$root/ADP1"
+fail() { echo "hp-battery-limit: $*" >&2; exit 1; }
+[[ -r $bat/charge_behaviour && -r $bat/capacity && -r $ac/online ]] ||
+    fail 'Required BAT0/ADP1 attributes are missing; no change made.'
+capacity=$(cat "$bat/capacity")
+online=$(cat "$ac/online")
+mode=$(cat "$bat/charge_behaviour")
+[[ $capacity =~ ^[0-9]{1,3}$ ]] || fail 'Invalid battery percentage.'
+capacity=$((10#$capacity))
+(( capacity <= 100 )) || fail 'Battery percentage outside 0..100.'
+[[ $online == 0 || $online == 1 ]] || fail 'Invalid AC state; no change made.'
+[[ $mode == *auto* && $mode == *inhibit-charge* ]] || fail 'Required charge behaviours unavailable.'
+target=''
+if [[ $online == 0 ]]; then
+    target=auto
+elif (( capacity >= 80 )); then
+    target=inhibit-charge
+elif (( capacity <= 75 )); then
+    target=auto
+fi
+if [[ -n $target && $mode != *"[$target]"* ]]; then
+    printf '%s\n' "$target" > "$bat/charge_behaviour"
+    printf 'Battery %s%%, AC %s: set %s\n' "$capacity" "$online" "$target"
+fi

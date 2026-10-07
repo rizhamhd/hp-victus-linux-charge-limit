@@ -1,0 +1,20 @@
+name: Shell and controller checks
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Shell syntax
+        run: |
+          bash -n install.sh
+          bash -n uninstall.sh
+          bash -n check-support.sh
+          bash -n scripts/hp-battery-limit
+          bash -n driver/build-module.sh
+      - name: ShellCheck
+        run: shellcheck install.sh uninstall.sh check-support.sh scripts/hp-battery-limit driver/build-module.sh
+      - name: Isolated controller tests
+        run: python3 -m unittest discover -s tests -v
